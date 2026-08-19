@@ -651,14 +651,17 @@ interface NfcCommands {
    *
    * W1 only. W3 derives its own keyset internally and cannot cosign for a
    * foreign descriptor, so it throws.
+   *
+   * Deliberately abstract rather than defaulted: this interface is forwarded by
+   * three hand-written decorators, and a defaulted method that one of them
+   * forgets to forward fails at runtime as an opaque NFC error rather than at
+   * compile time. Let the compiler find them.
    */
   suspend fun deriveExternalCosignerKey(
     session: NfcSession,
     network: BitcoinNetworkType,
     accountIndex: UInt,
-  ): HwSpendingPublicKey = throw NfcException.CommandError(
-    message = "deriveExternalCosignerKey is not supported on this hardware"
-  )
+  ): HwSpendingPublicKey
 
   /**
    * Sign an externally supplied [psbt] — one this app did not build, typically
@@ -684,9 +687,7 @@ interface NfcCommands {
     session: NfcSession,
     psbtBase64: String,
     originFingerprint: String,
-  ): String = throw NfcException.CommandError(
-    message = "signExternalTransaction is not supported on this hardware"
-  )
+  ): String
 
   /**
    * Sweep-sign the given [psbt] with the hardware key derived at the OLD account
