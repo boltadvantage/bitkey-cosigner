@@ -1,6 +1,8 @@
 package build.wallet.externalmultisig
 
 import okio.ByteString
+import okio.ByteString.Companion.decodeBase64
+import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Normalises a PSBT file's bytes into the base64 form the signing path expects.
@@ -36,6 +38,17 @@ object PsbtBytes {
     val text = runCatching { bytes.utf8() }.getOrNull()?.trim() ?: return null
     return if (text.startsWith(BASE64_MAGIC_PREFIX)) text else null
   }
+
+  /**
+   * Renders [base64] as the bytes to write to a `.psbt` file.
+   *
+   * Emits binary, matching what coordinators write themselves, so a file this
+   * app produces is indistinguishable from one it consumed. Falls back to the
+   * base64 text if the input will not decode — better to write something the
+   * user can still recover by hand than to write nothing.
+   */
+  fun toFileBytes(base64: String): ByteString =
+    base64.trim().decodeBase64() ?: base64.encodeUtf8()
 
   private fun hasBinaryMagic(bytes: ByteString): Boolean {
     if (bytes.size < MAGIC.size) return false

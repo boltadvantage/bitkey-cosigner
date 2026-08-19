@@ -26,3 +26,27 @@ interface FilePicker {
     val content: ByteString,
   )
 }
+
+/**
+ * Writes a file to a location the user chooses.
+ *
+ * Distinct from sharing: a share sheet only offers destinations that other
+ * installed apps have registered for, so whether "save to a USB drive" appears
+ * at all depends on what else is on the phone. This asks the system document
+ * picker for a location directly, which reaches removable media regardless.
+ */
+interface FileSaver {
+  /**
+   * Prompts for a destination and writes [content] there.
+   *
+   * @param suggestedName pre-filled filename, including extension.
+   * @param mimeType type to create, e.g. `application/octet-stream`.
+   * @return true if the file was written; false if the user cancelled or the
+   * write failed.
+   */
+  suspend fun saveFile(
+    suggestedName: String,
+    mimeType: String,
+    content: ByteString,
+  ): Boolean
+}

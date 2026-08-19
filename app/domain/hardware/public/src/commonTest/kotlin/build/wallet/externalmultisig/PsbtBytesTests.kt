@@ -33,6 +33,23 @@ class PsbtBytesTests : FunSpec({
     PsbtBytes.toBase64("  $base64  \r\n".encodeUtf8()) shouldBe base64
   }
 
+  test("round trip: file bytes we write are readable by our own reader") {
+    // The output of a signing run becomes the input of the next one.
+    val base64 = BINARY_PSBT.base64()
+    val written = PsbtBytes.toFileBytes(base64)
+    PsbtBytes.toBase64(written) shouldBe base64
+  }
+
+  test("written files are binary, matching what coordinators produce") {
+    PsbtBytes.toFileBytes(BINARY_PSBT.base64()) shouldBe BINARY_PSBT
+  }
+
+  test("undecodable base64 falls back to text rather than writing nothing") {
+    // Something recoverable by hand beats an empty file.
+    val garbage = "not valid base64 !!!"
+    PsbtBytes.toFileBytes(garbage) shouldBe garbage.encodeUtf8()
+  }
+
   test("a non-PSBT file is rejected rather than guessed at") {
     // Picking the wrong file off a drive is routine, not exceptional.
     PsbtBytes.toBase64("hello world".encodeUtf8()) shouldBe null

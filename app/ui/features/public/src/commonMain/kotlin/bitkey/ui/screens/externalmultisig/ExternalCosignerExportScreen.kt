@@ -11,8 +11,9 @@ import build.wallet.compose.collections.immutableListOf
 import build.wallet.di.ActivityScope
 import build.wallet.di.BitkeyInject
 import build.wallet.externalmultisig.ExternalCosignerExport
+import build.wallet.compose.coroutines.rememberStableCoroutineScope
 import build.wallet.platform.data.MimeType
-import build.wallet.platform.sharing.SharingManager
+import build.wallet.platform.filepicker.FileSaver
 import build.wallet.statemachine.core.ScreenModel
 import build.wallet.statemachine.core.form.FormBodyModel
 import build.wallet.statemachine.core.form.FormHeaderModel
@@ -28,6 +29,7 @@ import build.wallet.ui.model.list.ListGroupStyle
 import build.wallet.ui.model.list.ListItemModel
 import build.wallet.ui.model.toolbar.ToolbarAccessoryModel.IconAccessory.Companion.CloseAccessory
 import build.wallet.ui.model.toolbar.ToolbarModel
+import kotlinx.coroutines.launch
 import okio.ByteString.Companion.encodeUtf8
 
 /**
@@ -49,13 +51,14 @@ data class ExternalCosignerExportScreen(
 @BitkeyInject(ActivityScope::class)
 class ExternalCosignerExportScreenPresenter(
   private val nfcSessionUIStateMachine: NfcSessionUIStateMachine,
-  private val sharingManager: SharingManager,
+  private val fileSaver: FileSaver,
 ) : ScreenPresenter<ExternalCosignerExportScreen> {
   @Composable
   override fun model(
     navigator: Navigator,
     screen: ExternalCosignerExportScreen,
   ): ScreenModel {
+    val scope = rememberStableCoroutineScope()
     var uiState: State by remember { mutableStateOf(State.Intro) }
 
     return when (val state = uiState) {
@@ -93,22 +96,22 @@ class ExternalCosignerExportScreenPresenter(
         derivationPath = ExternalCosignerExport.originPath(state.key),
         xpub = state.key.key.xpub,
         onSaveJson = {
-          sharingManager.shareFile(
-            data = ExternalCosignerExport.toColdcardMultisigJson(state.key).encodeUtf8(),
-            mimeType = MimeType.JSON,
-            fileName = "${ExternalCosignerExport.fileBaseName(state.key)}.json",
-            title = "Save cosigner key",
-            completion = null
-          )
+          scope.launch {
+            fileSaver.saveFile(
+              suggestedName = "${ExternalCosignerExport.fileBaseName(state.key)}.json",
+              mimeType = MimeType.JSON.name,
+              content = ExternalCosignerExport.toColdcardMultisigJson(state.key).encodeUtf8()
+            )
+          }
         },
         onSaveText = {
-          sharingManager.shareFile(
-            data = ExternalCosignerExport.toManualEntryText(state.key).encodeUtf8(),
-            mimeType = MimeType.TEXT_PLAIN,
-            fileName = "${ExternalCosignerExport.fileBaseName(state.key)}.txt",
-            title = "Save cosigner details",
-            completion = null
-          )
+          scope.launch {
+            fileSaver.saveFile(
+              suggestedName = "${ExternalCosignerExport.fileBaseName(state.key)}.txt",
+              mimeType = MimeType.TEXT_PLAIN.name,
+              content = ExternalCosignerExport.toManualEntryText(state.key).encodeUtf8()
+            )
+          }
         },
         onDone = { navigator.goTo(ExternalMultisigHomeScreen) }
       ).asModalScreen()

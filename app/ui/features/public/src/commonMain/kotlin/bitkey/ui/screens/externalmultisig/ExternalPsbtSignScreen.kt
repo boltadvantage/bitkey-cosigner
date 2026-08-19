@@ -18,7 +18,7 @@ import build.wallet.externalmultisig.ExternalPsbtSummary
 import build.wallet.externalmultisig.PsbtBytes
 import build.wallet.platform.data.MimeType
 import build.wallet.platform.filepicker.FilePicker
-import build.wallet.platform.sharing.SharingManager
+import build.wallet.platform.filepicker.FileSaver
 import build.wallet.statemachine.core.ScreenModel
 import build.wallet.statemachine.core.ScreenPresentationStyle.Modal
 import build.wallet.statemachine.core.form.FormBodyModel
@@ -37,7 +37,6 @@ import build.wallet.ui.model.toolbar.ToolbarModel
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import kotlinx.coroutines.launch
-import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Signs a PSBT that came from an external coordinator, with the Bitkey acting as
@@ -62,7 +61,7 @@ data class ExternalPsbtSignScreen(
 class ExternalPsbtSignScreenPresenter(
   private val nfcSessionUIStateMachine: NfcSessionUIStateMachine,
   private val filePicker: FilePicker,
-  private val sharingManager: SharingManager,
+  private val fileSaver: FileSaver,
   private val psbtBuilder: BdkPartiallySignedTransactionBuilder,
   private val addressBuilder: BdkAddressBuilder,
 ) : ScreenPresenter<ExternalPsbtSignScreen> {
@@ -143,13 +142,14 @@ class ExternalPsbtSignScreenPresenter(
 
       is State.Signed -> SignedBodyModel(
         onSave = {
-          sharingManager.shareFile(
-            data = state.signedBase64.encodeUtf8(),
-            mimeType = MimeType.TEXT_PLAIN,
-            fileName = signedFileName(state.review.fileName),
-            title = "Save signed transaction",
-            completion = null
-          )
+          scope.launch {
+            fileSaver.saveFile(
+              suggestedName = signedFileName(state.review.fileName),
+              // Binary, as coordinators write it themselves.
+              mimeType = "application/octet-stream",
+              content = PsbtBytes.toFileBytes(state.signedBase64)
+            )
+          }
         },
         onDone = { navigator.goTo(ExternalMultisigHomeScreen) }
       ).asModalScreen()
