@@ -69,3 +69,10 @@ automation/feedback-loop/.feedback-loop-runs/
 # Trailblaze runtime artifacts (session logs, settings) - not source
 /logs/
 /.trailblaze/
+
+# Release signing key for the cosigner build. Private — never commit.
+# Android ties app identity to this key permanently; treat it like a credential.
+cosigner.jks
+*.jks
+*.keystore
+!app/android/app/debug.keystore
