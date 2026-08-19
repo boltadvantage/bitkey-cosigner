@@ -53,6 +53,19 @@ class ExternalCosignerExportTests : FunSpec({
     text shouldContain "output descriptor"
   }
 
+  test("manual entry text names the Coldcard import route") {
+    // Verified against Sparrow: the generic airgapped-import entry rejects this
+    // shape; it has to go in via the Coldcard keystore option. Whoever does the
+    // import is standing at an offline machine and cannot look that up.
+    val text = ExternalCosignerExport.toManualEntryText(key())
+    text shouldContain "Coldcard"
+    text shouldContain "Import file"
+  }
+
+  test("manual entry text tells the user to verify the path after import") {
+    ExternalCosignerExport.toManualEntryText(key()) shouldContain "silently derives a different wallet"
+  }
+
   test("coldcard json has the fields Sparrow reads") {
     val json = ExternalCosignerExport.toColdcardMultisigJson(key())
     json shouldContain """"xfp": "A1B2C3D4""""

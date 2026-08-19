@@ -16,11 +16,14 @@ import build.wallet.bitkey.hardware.HwSpendingPublicKey
  * - [toColdcardMultisigJson] is the convenience path — Coldcard's multisig
  *   export shape, which Sparrow imports directly.
  *
- * The JSON is best-effort: Coldcard emits SLIP-132 (`Zpub`) in the `p2wsh`
- * field where we emit a standard `xpub`, since re-encoding version bytes would
- * mean pulling base58 into this layer for no gain in the manual path. Sparrow is
- * generally tolerant of standard xpubs here, but if an import is ever rejected
- * the text file is the answer, not a bug to chase.
+ * Coldcard itself emits SLIP-132 (`Zpub`) in the `p2wsh` field where we emit a
+ * standard `xpub`. Verified against Sparrow: it accepts the standard `xpub`, so
+ * no version-byte re-encoding is needed and base58 stays out of this layer.
+ *
+ * The import route is not obvious — in Sparrow the file must be imported via the
+ * *Coldcard* keystore option specifically, not the generic airgapped-import
+ * entry. [toManualEntryText] says so, because the person doing the import will
+ * be standing at an offline machine with no way to look it up.
  */
 object ExternalCosignerExport {
   /**
@@ -66,6 +69,16 @@ object ExternalCosignerExport {
       appendLine()
       appendLine("Full key expression (BIP380):")
       appendLine(dpk.dpub)
+      appendLine()
+      appendLine("To import into Sparrow:")
+      appendLine("  New Wallet -> Multi Signature -> select your quorum, then on this")
+      appendLine("  cosigner's slot choose Coldcard -> Import file, and pick the .json")
+      appendLine("  file next to this one. Sparrow reads the Coldcard export shape;")
+      appendLine("  the generic airgapped-import entry will not accept it.")
+      appendLine()
+      appendLine("  Then confirm the keystore shows the fingerprint and derivation path")
+      appendLine("  above. If either differs, fix it before going further -- a wrong path")
+      appendLine("  silently derives a different wallet.")
       appendLine()
       appendLine("This is a PUBLIC key. It reveals your addresses to anyone who holds it,")
       appendLine("but it cannot spend. The private key never leaves the Bitkey hardware.")
