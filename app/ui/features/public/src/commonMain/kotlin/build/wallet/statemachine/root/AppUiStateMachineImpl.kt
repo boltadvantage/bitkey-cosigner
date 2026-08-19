@@ -22,6 +22,7 @@ import build.wallet.di.BitkeyInject
 import build.wallet.feature.flags.AppUpdateModalFeatureFlag
 import build.wallet.logging.logInfo
 import build.wallet.mapResult
+import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
 import build.wallet.onboarding.CreateFullAccountContext
 import build.wallet.platform.config.AppVariant
 import build.wallet.platform.device.DeviceInfoProvider
@@ -181,36 +182,16 @@ class AppUiStateMachineImpl(
           }
         )
       )
-      is State.NoActiveAccount -> noActiveAccountUiStateMachine.model(
-        props = NoActiveAccountUiProps(
-          goToLiteAccountCreation = {
-            uiState = State.CreatingLiteAccount(
-              inviteCode = null,
-              startIntent = StartIntent.BeTrustedContact
-            )
-          },
-          onSoftwareWalletCreated = { swAccount ->
-            uiState = State.ViewingSoftwareAccount(
-              account = swAccount,
-              isNewlyCreatedAccount = true
-            )
-          },
-          onStartLiteAccountRecovery = { cloudBackup ->
-            uiState = State.RecoveringLiteAccount(cloudBackup)
-          },
-          onStartLiteAccountCreation = { inviteCode, startIntent ->
-            uiState = State.CreatingLiteAccount(inviteCode, startIntent)
-          },
-          onCreateFullAccount = {
-            uiState = State.CreatingFullAccount
-          },
-          onViewFullAccount = { account ->
-            uiState = State.ViewingFullAccount(
-              account = account,
-              isNewlyCreatedAccount = false
-            )
-          }
-        )
+      // FORK: this build exists only to cosign for an externally managed multisig.
+      // With no account it opens the cosigner tools rather than onboarding, so it
+      // can be installed, used and uninstalled without ever creating one. The
+      // stock onboarding path (noActiveAccountUiStateMachine) is intentionally
+      // unreachable here — use the official app for a real Bitkey wallet.
+      is State.NoActiveAccount -> navigatorPresenter.model(
+        initialScreen = ExternalMultisigHomeScreen,
+        onExit = {
+          // Nothing to return to: this is the root of the app.
+        }
       )
       is State.ViewingFullAccount -> {
         var shouldShowWelcomeScreen by remember { mutableStateOf(state.isNewlyCreatedAccount) }

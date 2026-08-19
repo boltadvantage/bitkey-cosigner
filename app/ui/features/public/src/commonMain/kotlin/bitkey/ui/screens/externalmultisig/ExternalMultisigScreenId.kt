@@ -3,6 +3,9 @@ package bitkey.ui.screens.externalmultisig
 import build.wallet.analytics.events.screen.id.EventTrackerScreenId
 
 enum class ExternalMultisigScreenId : EventTrackerScreenId {
+  /** Entry point for the external-multisig build. */
+  EXTERNAL_MULTISIG_HOME,
+
   /** Explains what the cosigner export is, before any hardware tap. */
   EXTERNAL_COSIGNER_EXPORT_INTRO,
 
