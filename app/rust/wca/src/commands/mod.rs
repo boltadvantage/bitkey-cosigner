@@ -4,6 +4,7 @@ mod authentication;
 mod coredump;
 mod decompose_psbt;
 mod device_id;
+mod external_multisig;
 mod eek_restoration_unseal;
 mod feature_flags;
 mod keyset_repair_rotate;
@@ -67,6 +68,10 @@ pub use device_id::GetTelemetryIdentifiers;
 pub use device_id::SecureBootConfig;
 pub use device_id::{BioMatchStats, TemplateMatchStats};
 pub use device_id::{DeviceInfoMcu, McuInfo};
+pub use external_multisig::{
+    enforce_external_cosigner_only, external_cosigner_path, DeriveExternalCosignerKey,
+    SignExternalTransaction, EXTERNAL_COSIGNER_PURPOSE, EXTERNAL_COSIGNER_SCRIPT_TYPE,
+};
 pub use eek_restoration_unseal::{EekRestorationUnseal, EekRestorationUnsealResult};
 pub use keyset_repair_rotate::{KeysetRepairRotateHwKey, KeysetRepairRotateHwKeyResult};
 pub use keyset_repair_unseal::{KeysetRepairUnseal, KeysetRepairUnsealResult};

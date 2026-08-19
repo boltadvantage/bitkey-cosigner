@@ -14,7 +14,7 @@ use crate::{
 use super::sign_sighash::derive_and_sign_sighash;
 
 #[generator(yield(Vec<u8>), resume(Vec<u8>))]
-fn sign_transaction(
+pub(crate) fn sign_transaction(
     mut psbt: PartiallySignedTransaction,
     origin_fingerprint: Fingerprint,
     async_sign: bool,

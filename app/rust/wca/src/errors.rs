@@ -131,6 +131,8 @@ pub enum CommandError {
     ConfirmationMismatch,
     #[error("confirmation not completed on device")]
     ConfirmationNotCompleted,
+    #[error("refusing to sign: input derives outside the external cosigner subtree (m/48\')")]
+    ExternalCosignerPathRejected,
 }
 
 impl<T> From<PoisonError<T>> for CommandError {
