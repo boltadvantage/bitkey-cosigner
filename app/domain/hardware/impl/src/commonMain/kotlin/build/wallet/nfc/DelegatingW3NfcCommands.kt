@@ -26,6 +26,26 @@ internal abstract class DelegatingW3NfcCommands : W3NfcCommands {
         message = "W3 commands required but got ${delegatedCommands(session)::class.simpleName}"
       )
 
+  override suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ) = delegatedCommands(session).deriveExternalCosignerKey(
+    session = session,
+    network = network,
+    accountIndex = accountIndex
+  )
+
+  override suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbt: Psbt,
+    originFingerprint: String,
+  ) = delegatedCommands(session).signExternalTransaction(
+    session = session,
+    psbt = psbt,
+    originFingerprint = originFingerprint
+  )
+
   override suspend fun fwupStart(
     session: NfcSession,
     patchSize: UInt?,

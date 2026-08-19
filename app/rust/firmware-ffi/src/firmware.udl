@@ -51,6 +51,15 @@ interface SignTransaction {
   PartiallySignedTransactionState next(sequence<u8> response);
 };
 
+// Sign an externally supplied PSBT (e.g. from Sparrow) with the hardware key.
+// Rejects any input deriving outside the external cosigner subtree (m/48') so a
+// crafted PSBT cannot get the user's own Bitkey wallet keys signed blind.
+interface SignExternalTransaction {
+  constructor(PartiallySignedTransaction serialized_psbt, Fingerprint origin_fingerprint, boolean async_sign);
+  [Throws=CommandError]
+  PartiallySignedTransactionState next(sequence<u8> response);
+};
+
 interface WipeState {
   constructor();
   [Throws=CommandError]
@@ -164,6 +173,14 @@ interface SignChallenge {
 
 interface GetInitialSpendingKey {
   constructor(BtcNetwork network);
+  [Throws=CommandError]
+  SpendingKeyResultState next(sequence<u8> response);
+};
+
+// Derive the external multisig cosigner key at m/48'/coin'/account'/2'
+// (BIP48 P2WSH), for registering the Bitkey as one leg of an external multisig.
+interface DeriveExternalCosignerKey {
+  constructor(BtcNetwork network, u32 account_index);
   [Throws=CommandError]
   SpendingKeyResultState next(sequence<u8> response);
 };
@@ -978,6 +995,7 @@ enum CommandError {
   "DescriptorNotLoaded",
   "ConfirmationMismatch",
   "ConfirmationNotCompleted",
+  "ExternalCosignerPathRejected",
 };
 
 enum FirmwareSlot {

@@ -225,6 +225,19 @@ private open class RetryingNfcCommands(
       }
     )
 
+  override suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ): HwSpendingPublicKey =
+    retry { commands.deriveExternalCosignerKey(session, network, accountIndex) }
+
+  override suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbt: Psbt,
+    originFingerprint: String,
+  ): Psbt = retry { commands.signExternalTransaction(session, psbt, originFingerprint) }
+
   override suspend fun sweepTransaction(
     session: NfcSession,
     psbt: Psbt,
