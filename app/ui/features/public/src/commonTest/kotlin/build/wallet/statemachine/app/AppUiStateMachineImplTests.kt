@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import bitkey.account.AccountConfigServiceFake
 import bitkey.datadog.DatadogRumMonitorFake
 import bitkey.ui.framework.NavigatorPresenterFake
+import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
+import bitkey.ui.framework.NavigatorModelFake
 import build.wallet.account.AccountServiceFake
 import build.wallet.analytics.events.EventTrackerMock
 import build.wallet.analytics.events.TrackedAction
@@ -71,6 +73,7 @@ import build.wallet.logging.LogWriterMock
 import build.wallet.logging.Logger
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.DelicateCoroutinesApi
 import build.wallet.ui.theme.Theme
 import build.wallet.ui.theme.ThemePreference
@@ -185,11 +188,17 @@ class AppUiStateMachineImplTests : FunSpec({
     }
   }
 
-  test("NoActiveAccount shows NoActiveAccountUiStateMachine") {
+  // FORK: with no account this build opens the external-multisig cosigner
+  // tools instead of onboarding, so the account-creation and recovery flows
+  // reached from NoActiveAccountUiStateMachine are unreachable here. Their
+  // tests are removed rather than skipped: the behaviour is gone, not pending.
+  test("NoActiveAccount shows the external multisig cosigner home") {
     stateMachine.test(Unit) {
       awaitBody<SplashBodyModel>()
       eventTracker.awaitSplashScreenEvent()
-      awaitBodyMock<NoActiveAccountUiProps>()
+      awaitBody<NavigatorModelFake> {
+        initialScreen.shouldBeTypeOf<ExternalMultisigHomeScreen>()
+      }
 
       appWorkerExecutor.executeAllCalls.awaitItem()
     }
@@ -206,32 +215,6 @@ class AppUiStateMachineImplTests : FunSpec({
       loadAppService.appState.value = HasActiveSoftwareAccount(
         account = SoftwareAccountMock
       )
-
-      awaitBodyMock<HomeUiProps> {
-        account.shouldBe(SoftwareAccountMock)
-      }
-      appWorkerExecutor.executeAllCalls.awaitItem()
-      cancelAndIgnoreRemainingEvents()
-    }
-  }
-
-  test("create a new software account") {
-    loadAppService.appState.value = null
-
-    stateMachine.test(Unit) {
-      awaitBody<SplashBodyModel>()
-      eventTracker.awaitSplashScreenEvent()
-      expectNoEvents()
-
-      loadAppService.appState.value = AppState.NoActiveAccount
-
-      awaitBodyMock<NoActiveAccountUiProps> {
-        onSoftwareWalletCreated(SoftwareAccountMock)
-      }
-
-      awaitBody<LoadingSuccessBodyModel> {
-        message.shouldBe("Welcome to Bitkey")
-      }
 
       awaitBodyMock<HomeUiProps> {
         account.shouldBe(SoftwareAccountMock)
@@ -263,89 +246,6 @@ class AppUiStateMachineImplTests : FunSpec({
         isNewlyCreatedAccount.shouldBe(true)
       }
       appWorkerExecutor.executeAllCalls.awaitItem()
-      cancelAndIgnoreRemainingEvents()
-    }
-  }
-
-  test("creating a lite account") {
-    loadAppService.appState.value = null
-
-    stateMachine.test(Unit) {
-      awaitBody<SplashBodyModel>()
-      eventTracker.awaitSplashScreenEvent()
-      expectNoEvents()
-
-      loadAppService.appState.value = AppState.NoActiveAccount
-
-      awaitBodyMock<NoActiveAccountUiProps> {
-        onStartLiteAccountCreation("invite-code", StartIntent.BeTrustedContact)
-      }
-
-      awaitBodyMock<CreateLiteAccountUiProps> {
-        onAccountCreated(LiteAccountMock)
-      }
-
-      awaitBodyMock<LiteHomeUiProps>()
-      appWorkerExecutor.executeAllCalls.awaitItem()
-      cancelAndIgnoreRemainingEvents()
-    }
-  }
-
-  test("recovering a lite account") {
-    loadAppService.appState.value = null
-
-    stateMachine.test(Unit) {
-      awaitBody<SplashBodyModel>()
-      eventTracker.awaitSplashScreenEvent()
-      expectNoEvents()
-
-      loadAppService.appState.value = AppState.NoActiveAccount
-
-      awaitBodyMock<NoActiveAccountUiProps> {
-        onStartLiteAccountRecovery(AllLiteAccountBackupMocks[0] as CloudBackup)
-      }
-
-      awaitBodyMock<LiteAccountCloudBackupRestorationUiProps> {
-        onLiteAccountRestored(LiteAccountMock)
-      }
-
-      awaitBodyMock<LiteHomeUiProps>()
-      appWorkerExecutor.executeAllCalls.awaitItem()
-      cancelAndIgnoreRemainingEvents()
-    }
-  }
-
-  test("creating a full account") {
-    loadAppService.appState.value = null
-
-    stateMachine.test(Unit) {
-      awaitBody<SplashBodyModel>()
-      eventTracker.awaitSplashScreenEvent()
-      expectNoEvents()
-
-      loadAppService.appState.value = AppState.NoActiveAccount
-
-      awaitBodyMock<NoActiveAccountUiProps> {
-        onCreateFullAccount()
-      }
-
-      awaitBodyMock<CreateAccountUiProps> {
-        onOnboardingComplete(FullAccountMock)
-      }
-
-      awaitBody<LoadingSuccessBodyModel> {
-        message.shouldBe("Welcome to Bitkey")
-      }
-
-      awaitBodyMock<FullAccountUiProps> {
-        account.shouldBe(FullAccountMock)
-      }
-      appWorkerExecutor.executeAllCalls.awaitItem()
-
-      @OptIn(DelicateCoroutinesApi::class)
-      eventTracker.eventCalls.awaitItemMaybe()
-        ?.shouldBe(TrackedAction(ACTION_APP_SCREEN_IMPRESSION, LOADING_APP))
-
       cancelAndIgnoreRemainingEvents()
     }
   }
@@ -420,57 +320,6 @@ class AppUiStateMachineImplTests : FunSpec({
     }
   }
 
-  test("NoActiveAccountUiStateMachine transitions to ViewingFullAccount via onViewFullAccount") {
-    val accountService = AccountServiceFake()
-    loadAppService.appState.value = AppState.NoActiveAccount
-
-    // Reinitialize stateMachine with the accountService we can control
-    stateMachine = AppUiStateMachineImpl(
-      appVariant = AppVariant.Development,
-      navigatorPresenter = navigatorPresenter,
-      eventTracker = eventTracker,
-      homeUiStateMachine = object : HomeUiStateMachine,
-        ScreenStateMachineMock<HomeUiProps>(id = "home") {},
-      liteHomeUiStateMachine = object : LiteHomeUiStateMachine,
-        ScreenStateMachineMock<LiteHomeUiProps>(id = "lite-home") {},
-      fullAccountUiStateMachine = fullAccountUiStateMachine,
-      createAccountUiStateMachine = createAccountUiStateMachine,
-      noActiveAccountUiStateMachine = noActiveAccountUiStateMachine,
-      loadAppService = loadAppService,
-      createLiteAccountUiStateMachine = createLiteAccountUiStateMachine,
-      liteAccountCloudBackupRestorationUiStateMachine = liteAccountCloudBackupRestorationUiStateMachine,
-      appWorkerExecutor = appWorkerExecutor,
-      accountService = accountService,
-      accountConfigService = AccountConfigServiceFake(),
-      datadogRumMonitor = datadogRumMonitor,
-      splashScreenDelay = SplashScreenDelay(10.milliseconds),
-      welcomeToBitkeyScreenDuration = WelcomeToBitkeyScreenDuration(10.milliseconds),
-      deviceInfoProvider = DeviceInfoProviderMock(),
-      appUpdateModalFeatureFlag = appUpdateModalFeatureFlag,
-      appStoreUrlProvider = appStoreUrlProvider,
-      deepLinkHandler = deepLinkHandler
-    )
-
-    stateMachine.test(Unit) {
-      awaitBody<SplashBodyModel>()
-      eventTracker.awaitSplashScreenEvent()
-
-      // Should show NoActiveAccountUiProps initially
-      awaitBodyMock<NoActiveAccountUiProps> {
-        // Simulate the UI state machine calling onViewFullAccount
-        onViewFullAccount(FullAccountMock)
-      }
-
-      // Should transition to FullAccountUiProps
-      awaitBodyMock<FullAccountUiProps> {
-        account.shouldBe(FullAccountMock)
-      }
-
-      appWorkerExecutor.executeAllCalls.awaitItem()
-      cancelAndIgnoreRemainingEvents()
-    }
-  }
-
   test("AppLoadedDataScreenModel transitions to NoActiveAccount when account is cleared") {
     val accountService = AccountServiceFake()
     loadAppService.appState.value = AppState.HasActiveFullAccount(
@@ -519,8 +368,10 @@ class AppUiStateMachineImplTests : FunSpec({
       // Simulate account being cleared
       accountService.clear()
 
-      // Should transition to NoActiveAccountUiProps
-      awaitUntilBodyMock<NoActiveAccountUiProps> {}
+      // Should transition to the cosigner home, this build's no-account state
+      awaitUntilBody<NavigatorModelFake> {
+        initialScreen.shouldBeTypeOf<ExternalMultisigHomeScreen>()
+      }
 
       appWorkerExecutor.executeAllCalls.awaitItem()
       eventTracker.eventCalls.cancelAndIgnoreRemainingEvents()

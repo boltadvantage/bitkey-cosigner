@@ -642,6 +642,54 @@ interface NfcCommands {
   ): HardwareInteraction<Psbt>
 
   /**
+   * Derive the external multisig cosigner key at `m/48'/coin'/accountIndex'/2'`.
+   *
+   * This is the BIP48 P2WSH path, used to register the Bitkey as one leg of an
+   * externally managed multisig (e.g. a Sparrow 2-of-3 alongside other vendors'
+   * signers). It is deliberately disjoint from the BIP84 tree that holds the
+   * user's own Bitkey wallet keys — see [signExternalTransaction].
+   *
+   * W1 only. W3 derives its own keyset internally and cannot cosign for a
+   * foreign descriptor, so it throws.
+   *
+   * Deliberately abstract rather than defaulted: this interface is forwarded by
+   * three hand-written decorators, and a defaulted method that one of them
+   * forgets to forward fails at runtime as an opaque NFC error rather than at
+   * compile time. Let the compiler find them.
+   */
+  suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ): HwSpendingPublicKey
+
+  /**
+   * Sign an externally supplied [psbt] — one this app did not build, typically
+   * arriving by USB from an airgapped coordinator.
+   *
+   * Unlike [signTransaction], this refuses any input deriving outside the
+   * external cosigner subtree (`m/48'`). W1 has no display and will sign
+   * whatever hash it is handed, so without that check a crafted PSBT could get
+   * the user's own Bitkey wallet keys signed unseen. The guard runs before any
+   * hardware interaction, so a rejected PSBT never reaches the device.
+   *
+   * @param originFingerprint master fingerprint of the Bitkey, as reported by
+   * the origin of the key from [deriveExternalCosignerKey].
+   *
+   * Takes and returns base64 rather than the domain [Psbt] type: an externally
+   * supplied PSBT has no wallet context to build one from, and fabricating the
+   * missing fields would invent numbers the UI might then display.
+   *
+   * @return the base64 PSBT with the hardware signature added. It will not be
+   * finalized — the other cosigners still have to sign.
+   */
+  suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbtBase64: String,
+    originFingerprint: String,
+  ): String
+
+  /**
    * Sweep-sign the given [psbt] with the hardware key derived at the OLD account
    * index (W3 only). Used when moving UTXOs from a retired account to the
    * current account's fresh receive address after an account-bumping recovery.

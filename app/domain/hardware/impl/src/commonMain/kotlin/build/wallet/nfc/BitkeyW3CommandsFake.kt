@@ -482,6 +482,22 @@ class BitkeyW3CommandsFake(
    * Throws [NfcException.DescriptorNotLoaded] if [verifyKeysAndBuildDescriptor] has not
    * been called, matching real hardware behavior.
    */
+  override suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ): HwSpendingPublicKey = throw NfcException.CommandError(
+    message = "deriveExternalCosignerKey is not supported on this hardware"
+  )
+
+  override suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbtBase64: String,
+    originFingerprint: String,
+  ): String = throw NfcException.CommandError(
+    message = "signExternalTransaction is not supported on this hardware"
+  )
+
   override suspend fun signTransaction(
     session: NfcSession,
     psbt: Psbt,

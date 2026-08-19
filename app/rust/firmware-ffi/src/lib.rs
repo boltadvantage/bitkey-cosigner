@@ -21,6 +21,7 @@ use wca::commands::{
     FwupStartResult, FwupTransfer, GetAddress, GetAddressResult, GetAuthenticationKey,
     GetCert, GetConfirmationResult,
     GetCoredumpCount, GetCoredumpFragment, GetDeviceIdentifiers, GetDeviceInfo,
+    DeriveExternalCosignerKey, SignExternalTransaction,
     GetEnrolledFingerprints, GetEvents, GetFingerprintEnrollmentStatus, GetFirmwareFeatureFlags,
     GetFirmwareMetadata, GetInitialSpendingKey, GetNextSpendingKey, GetTelemetryIdentifiers,
     GetTxSignature, GetTxSignaturesBatch, GetUnlockMethod, InputSignatureTuple, LockDevice,

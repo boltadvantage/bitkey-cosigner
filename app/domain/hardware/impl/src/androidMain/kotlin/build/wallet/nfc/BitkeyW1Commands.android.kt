@@ -348,6 +348,45 @@ class BitkeyW1Commands(
     return getInitialSpendingPublicKeyInternal(session, network).toHwSpendingPublicKey()
   }
 
+  override suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ): HwSpendingPublicKey {
+    val result = executeCommand(
+      session = session,
+      generateCommand = {
+        DeriveExternalCosignerKey(
+          network = network.toBtcNetwork(),
+          accountIndex = accountIndex
+        )
+      },
+      getNext = { command, data -> command.next(data) },
+      getResponse = { state: SpendingKeyResultState.Data -> state.response },
+      generateResult = { state: SpendingKeyResultState.Result -> state.value }
+    )
+    return result.toHwSpendingPublicKey()
+  }
+
+  override suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbtBase64: String,
+    originFingerprint: String,
+  ): String =
+    executeCommand(
+      session = session,
+      generateCommand = {
+        SignExternalTransaction(
+          psbtBase64,
+          originFingerprint,
+          session.parameters.asyncNfcSigning
+        )
+      },
+      getNext = { command, data -> command.next(data) },
+      getResponse = { state: PartiallySignedTransactionState.Data -> state.response },
+      generateResult = { state: PartiallySignedTransactionState.Result -> state.value }
+    )
+
   private suspend fun getInitialSpendingPublicKeyInternal(
     session: NfcSession,
     network: BitcoinNetworkType,

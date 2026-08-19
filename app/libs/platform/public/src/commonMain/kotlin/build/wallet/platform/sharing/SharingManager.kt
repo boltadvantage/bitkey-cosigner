@@ -33,6 +33,28 @@ interface SharingManager {
   )
 
   /**
+   * Share [data] as an actual file named [fileName], rather than as inline
+   * content.
+   *
+   * [shareData] special-cases text as `EXTRA_TEXT`, which hands the receiving
+   * app a string rather than a document — so "Save to Files", and with it any
+   * USB/OTG destination, is not offered. Use this when the result has to land on
+   * disk with a known name and extension.
+   *
+   * Defaults to [shareData] so platforms without a file-based implementation
+   * keep their existing behaviour.
+   */
+  fun shareFile(
+    data: ByteString,
+    mimeType: MimeType,
+    fileName: String,
+    title: String,
+    completion: ((Boolean) -> Unit)?,
+  ) {
+    shareData(data = data, mimeType = mimeType, title = title, completion = completion)
+  }
+
+  /**
    * Used to call the optional completion block when a share sheet action
    * has been selected.
    */

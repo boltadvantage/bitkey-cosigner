@@ -19,6 +19,12 @@ import bitkey.ui.screens.trustedcontact.ReinviteTrustedContactScreen
 import bitkey.ui.screens.trustedcontact.ReinviteTrustedContactScreenPresenter
 import bitkey.ui.screens.trustedcontact.RemoveTrustedContactScreen
 import bitkey.ui.screens.trustedcontact.RemoveTrustedContactScreenPresenter
+import bitkey.ui.screens.externalmultisig.ExternalCosignerExportScreen
+import bitkey.ui.screens.externalmultisig.ExternalCosignerExportScreenPresenter
+import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
+import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreenPresenter
+import bitkey.ui.screens.externalmultisig.ExternalPsbtSignScreen
+import bitkey.ui.screens.externalmultisig.ExternalPsbtSignScreenPresenter
 import build.wallet.di.ActivityScope
 import build.wallet.di.BitkeyInject
 import build.wallet.statemachine.biometric.BiometricSettingScreen
@@ -66,10 +72,16 @@ class ScreenPresenterRegistryImpl(
   private val appFunctionalityStatusScreenPresenter: AppFunctionalityStatusScreenPresenter,
   private val securityHubEducationScreenPresenter: SecurityHubEducationScreenPresenter,
   private val spendingKeysetRepairScreenPresenter: SpendingKeysetRepairScreenPresenter,
+  private val externalMultisigHomeScreenPresenter: ExternalMultisigHomeScreenPresenter,
+  private val externalCosignerExportScreenPresenter: ExternalCosignerExportScreenPresenter,
+  private val externalPsbtSignScreenPresenter: ExternalPsbtSignScreenPresenter,
 ) : ScreenPresenterRegistry {
   override fun <ScreenT : Screen> get(screen: ScreenT): ScreenPresenter<ScreenT> {
     @Suppress("UNCHECKED_CAST")
     return when (screen) {
+      is ExternalMultisigHomeScreen -> externalMultisigHomeScreenPresenter
+      is ExternalCosignerExportScreen -> externalCosignerExportScreenPresenter
+      is ExternalPsbtSignScreen -> externalPsbtSignScreenPresenter
       is WelcomeScreen -> welcomeScreenPresenter
       is AccountAccessOptionsScreen -> accountAccessOptionsScreenPresenter
       is DemoModeEnabledScreen -> demoModeEnabledScreenPresenter

@@ -278,6 +278,22 @@ private open class MetricsNfcCommands(
     challenge: ByteString,
   ) = measure("signChallenge") { commands.signChallenge(session, challenge) }
 
+  override suspend fun deriveExternalCosignerKey(
+    session: NfcSession,
+    network: BitcoinNetworkType,
+    accountIndex: UInt,
+  ) = measure("deriveExternalCosignerKey") {
+    commands.deriveExternalCosignerKey(session, network, accountIndex)
+  }
+
+  override suspend fun signExternalTransaction(
+    session: NfcSession,
+    psbtBase64: String,
+    originFingerprint: String,
+  ) = measure("signExternalTransaction") {
+    commands.signExternalTransaction(session, psbtBase64, originFingerprint)
+  }
+
   override suspend fun signTransaction(
     session: NfcSession,
     psbt: Psbt,
