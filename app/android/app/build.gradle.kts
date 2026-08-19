@@ -48,6 +48,37 @@ android {
       keyAlias = "upload-key"
       keyPassword = "bitcointime"
     }
+
+    // Release signing for the cosigner build. Values come from Gradle properties
+    // (put them in ~/.gradle/gradle.properties, never in the repo):
+    //
+    //   cosignerKeystoreFile=/absolute/path/to/cosigner.jks
+    //   cosignerKeystorePassword=...
+    //   cosignerKeyAlias=cosigner
+    //   cosignerKeyPassword=...
+    //
+    // If they are absent the build falls back to the debug key and says so. That
+    // key is public — its password is three lines above — so anything signed
+    // with it can be replaced by anyone. Fine over USB, not fine for an APK
+    // fetched over a network.
+    create("cosigner") {
+      val keystorePath = project.findProperty("cosignerKeystoreFile")?.toString()
+      if (keystorePath.isNullOrBlank()) {
+        logger.warn(
+          "cosigner: no cosignerKeystoreFile property set; signing with the PUBLIC debug key. " +
+            "Do not distribute this APK."
+        )
+        storeFile = file(project.file("debug.keystore"))
+        storePassword = "bitcointime"
+        keyAlias = "upload-key"
+        keyPassword = "bitcointime"
+      } else {
+        storeFile = file(keystorePath)
+        storePassword = project.findProperty("cosignerKeystorePassword")?.toString()
+        keyAlias = project.findProperty("cosignerKeyAlias")?.toString()
+        keyPassword = project.findProperty("cosignerKeyPassword")?.toString()
+      }
+    }
   }
 
   buildTypes {
@@ -81,6 +112,33 @@ android {
       isDebuggable = true
       isMinifyEnabled = false
       isShrinkResources = false
+    }
+
+    // Standalone cosigner build.
+    // App ID = "world.bitkey.cosigner"
+    //
+    // Minified and shrunk like a production build, but packaged for a single
+    // ABI. The debug APK is ~950MB, of which ~824MB is unstripped Rust across
+    // four architectures; a phone only ever loads one of them.
+    register("cosigner") {
+      initWith(getByName("release"))
+      applicationIdSuffix = ".cosigner"
+      matchingFallbacks += listOf("release")
+      signingConfig = signingConfigs.getByName("cosigner")
+      isMinifyEnabled = true
+      isShrinkResources = true
+      isDebuggable = false
+      buildConfigField("String", "BUILD_DATE", "\"${releaseBuildDate}\"")
+      proguardFiles(
+        getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+      )
+      ndk {
+        // Every phone this can run on is arm64. Pair with
+        // -Pbuild.wallet.rust.androidTargets=arm64 so the other architectures
+        // are never compiled in the first place.
+        abiFilters += "arm64-v8a"
+      }
     }
 
     // Build Type for Production builds

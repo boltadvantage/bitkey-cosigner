@@ -22,6 +22,8 @@ import bitkey.ui.screens.trustedcontact.RemoveTrustedContactScreenPresenter
 import bitkey.ui.screens.externalmultisig.ExternalCosignerExportScreen
 import bitkey.ui.screens.externalmultisig.ExternalCosignerExportScreenPresenter
 import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
+import bitkey.ui.screens.externalmultisig.ExternalMultisigWarningScreen
+import bitkey.ui.screens.externalmultisig.ExternalMultisigWarningScreenPresenter
 import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreenPresenter
 import bitkey.ui.screens.externalmultisig.ExternalPsbtSignScreen
 import bitkey.ui.screens.externalmultisig.ExternalPsbtSignScreenPresenter
@@ -72,6 +74,7 @@ class ScreenPresenterRegistryImpl(
   private val appFunctionalityStatusScreenPresenter: AppFunctionalityStatusScreenPresenter,
   private val securityHubEducationScreenPresenter: SecurityHubEducationScreenPresenter,
   private val spendingKeysetRepairScreenPresenter: SpendingKeysetRepairScreenPresenter,
+  private val externalMultisigWarningScreenPresenter: ExternalMultisigWarningScreenPresenter,
   private val externalMultisigHomeScreenPresenter: ExternalMultisigHomeScreenPresenter,
   private val externalCosignerExportScreenPresenter: ExternalCosignerExportScreenPresenter,
   private val externalPsbtSignScreenPresenter: ExternalPsbtSignScreenPresenter,
@@ -79,6 +82,7 @@ class ScreenPresenterRegistryImpl(
   override fun <ScreenT : Screen> get(screen: ScreenT): ScreenPresenter<ScreenT> {
     @Suppress("UNCHECKED_CAST")
     return when (screen) {
+      is ExternalMultisigWarningScreen -> externalMultisigWarningScreenPresenter
       is ExternalMultisigHomeScreen -> externalMultisigHomeScreenPresenter
       is ExternalCosignerExportScreen -> externalCosignerExportScreenPresenter
       is ExternalPsbtSignScreen -> externalPsbtSignScreenPresenter

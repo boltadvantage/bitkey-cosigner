@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import bitkey.account.AccountConfigServiceFake
 import bitkey.datadog.DatadogRumMonitorFake
 import bitkey.ui.framework.NavigatorPresenterFake
-import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
+import bitkey.ui.screens.externalmultisig.ExternalMultisigWarningScreen
 import bitkey.ui.framework.NavigatorModelFake
 import build.wallet.account.AccountServiceFake
 import build.wallet.analytics.events.EventTrackerMock
@@ -192,12 +192,12 @@ class AppUiStateMachineImplTests : FunSpec({
   // tools instead of onboarding, so the account-creation and recovery flows
   // reached from NoActiveAccountUiStateMachine are unreachable here. Their
   // tests are removed rather than skipped: the behaviour is gone, not pending.
-  test("NoActiveAccount shows the external multisig cosigner home") {
+  test("NoActiveAccount shows the testing-only warning gate") {
     stateMachine.test(Unit) {
       awaitBody<SplashBodyModel>()
       eventTracker.awaitSplashScreenEvent()
       awaitBody<NavigatorModelFake> {
-        initialScreen.shouldBeTypeOf<ExternalMultisigHomeScreen>()
+        initialScreen.shouldBeTypeOf<ExternalMultisigWarningScreen>()
       }
 
       appWorkerExecutor.executeAllCalls.awaitItem()
@@ -370,7 +370,7 @@ class AppUiStateMachineImplTests : FunSpec({
 
       // Should transition to the cosigner home, this build's no-account state
       awaitUntilBody<NavigatorModelFake> {
-        initialScreen.shouldBeTypeOf<ExternalMultisigHomeScreen>()
+        initialScreen.shouldBeTypeOf<ExternalMultisigWarningScreen>()
       }
 
       appWorkerExecutor.executeAllCalls.awaitItem()

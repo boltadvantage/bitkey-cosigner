@@ -22,7 +22,7 @@ import build.wallet.di.BitkeyInject
 import build.wallet.feature.flags.AppUpdateModalFeatureFlag
 import build.wallet.logging.logInfo
 import build.wallet.mapResult
-import bitkey.ui.screens.externalmultisig.ExternalMultisigHomeScreen
+import bitkey.ui.screens.externalmultisig.ExternalMultisigWarningScreen
 import build.wallet.onboarding.CreateFullAccountContext
 import build.wallet.platform.config.AppVariant
 import build.wallet.platform.device.DeviceInfoProvider
@@ -188,7 +188,7 @@ class AppUiStateMachineImpl(
       // stock onboarding path (noActiveAccountUiStateMachine) is intentionally
       // unreachable here — use the official app for a real Bitkey wallet.
       is State.NoActiveAccount -> navigatorPresenter.model(
-        initialScreen = ExternalMultisigHomeScreen,
+        initialScreen = ExternalMultisigWarningScreen,
         onExit = {
           // Nothing to return to: this is the root of the app.
         }

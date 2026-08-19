@@ -17,6 +17,8 @@ import build.wallet.ui.model.button.ButtonModel
 import build.wallet.ui.model.list.ListGroupModel
 import build.wallet.ui.model.list.ListGroupStyle
 import build.wallet.ui.model.list.ListItemModel
+import build.wallet.statemachine.core.LabelModel
+import build.wallet.ui.model.callout.CalloutModel
 import build.wallet.ui.model.list.ListItemAccessory
 
 /**
@@ -70,6 +72,22 @@ private data class ExternalMultisigHomeBodyModel(
         "another coordinator. Nothing is stored on this phone."
     ),
     mainContentList = immutableListOf(
+      // First thing on the screen, every launch. This is unreviewed, unaudited
+      // software that asks a hardware wallet to sign things; anyone running it
+      // should be told plainly before they touch a single control.
+      FormMainContentModel.Callout(
+        item = CalloutModel(
+          title = "TESTING ONLY — DO NOT USE WITH REAL FUNDS",
+          subtitle = LabelModel.StringModel(
+            "This is unofficial, unaudited software. Use testnet only.\n\n" +
+              "Do not put real bitcoin in a wallet built with this key, and do " +
+              "not keep real bitcoin in your Bitkey app while testing it. Both " +
+              "keys come from the same device.\n\n" +
+              "Treat any coin it touches as money you are willing to lose."
+          ),
+          treatment = CalloutModel.Treatment.Danger
+        )
+      ),
       FormMainContentModel.ListGroup(
         listGroupModel = ListGroupModel(
           items = immutableListOf(

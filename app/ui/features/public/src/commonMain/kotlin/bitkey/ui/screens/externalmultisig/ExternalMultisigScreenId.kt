@@ -3,6 +3,9 @@ package bitkey.ui.screens.externalmultisig
 import build.wallet.analytics.events.screen.id.EventTrackerScreenId
 
 enum class ExternalMultisigScreenId : EventTrackerScreenId {
+  /** Testing-only warning gate, shown before anything else. */
+  EXTERNAL_MULTISIG_WARNING,
+
   /** Entry point for the external-multisig build. */
   EXTERNAL_MULTISIG_HOME,
 

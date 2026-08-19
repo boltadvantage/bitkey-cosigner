@@ -1,5 +1,22 @@
 # Bitkey Cosigner
 
+> # ⚠️ TESTING ONLY — DO NOT USE WITH REAL FUNDS
+>
+> **This is unofficial, unaudited, unreviewed software that asks a hardware
+> wallet to sign bitcoin transactions. It has been exercised on testnet by one
+> person. That is not a security review.**
+>
+> - **Use testnet only.** Do not put real bitcoin in a wallet built with a key
+>   exported by this app.
+> - **Do not keep real bitcoin in your Bitkey app while testing this.** Both
+>   keys come from the same seed on the same device. A bug here is not neatly
+>   contained to the multisig.
+> - **Treat any coin this software touches as money you are willing to lose.**
+>
+> The guard that stops a crafted PSBT from spending your real Bitkey wallet is
+> covered by unit tests but has **not yet been verified against real hardware**.
+> Until it has, assume it does not work.
+
 A fork of [Block's Bitkey](https://github.com/proto-at-block/bitkey) that lets a
 Bitkey W1 act as one signer in a multisig wallet managed by another coordinator —
 for example a 2-of-3 in [Sparrow](https://sparrowwallet.com) alongside a Trezor
@@ -8,7 +25,7 @@ and a Jade.
 The stock app only ever signs for its own 2-of-3 (phone key, hardware key, Block's
 server key). This build does one thing instead: export the hardware's public key
 for an external wallet, and sign PSBTs for that wallet. It creates no account,
-stores nothing, and installs alongside the official app as `world.bitkey.debug`
+stores nothing, and installs alongside the official app as `world.bitkey.cosigner`
 so your real Bitkey wallet is untouched.
 
 > **This is an unofficial fork.** It is not affiliated with, endorsed by, or
@@ -58,7 +75,7 @@ rejects the entire PSBT, before any NFC traffic.
 Files move via the system document picker, which reaches USB/OTG storage in both
 directions.
 
-## Read this before using it with real money
+## If you ignore the warning above, read this at least
 
 **The Bitkey cannot verify what it signs.** It has no screen. The transaction
 details this app shows are the only chance to notice a tampered PSBT, and they
@@ -88,18 +105,51 @@ broadcast.
 ```bash
 git submodule update --init firmware/third-party/memfault-firmware-sdk firmware/third-party/nanopb
 source bin/activate-hermit
+```
+
+**Release build** (`world.bitkey.cosigner`, minified, arm64 only, ~80MB):
+
+```bash
+cd app && ../bin/gradle :android:app:assembleCosigner -Pbuild.wallet.rust.androidTargets=arm64
+```
+
+**Development build** (`world.bitkey.debug`, unminified, all ABIs, ~910MB — the
+size is unstripped Rust for four architectures, of which a phone loads one):
+
+```bash
 cd app && just android-app-install
 ```
+
+### Signing
+
+The release build is signed with the repo's **public** debug key unless you
+supply your own — its password is in `build.gradle.kts`, so anything signed with
+it can be replaced by anyone who wants to. Fine over USB, not fine for an APK
+fetched over a network. To use your own, create a keystore:
+
+```bash
+keytool -genkeypair -v -keystore cosigner.jks -keyalg RSA -keysize 4096 -validity 10000 -alias cosigner
+```
+
+and put these in `~/.gradle/gradle.properties` (never in the repo):
+
+```properties
+cosignerKeystoreFile=/absolute/path/to/cosigner.jks
+cosignerKeystorePassword=...
+cosignerKeyAlias=cosigner
+cosignerKeyPassword=...
+```
+
+Keep the same key for every build you distribute — Android identifies an app by
+its signing key, and changing it breaks updates.
+
+### Toolchain notes
 
 Needs Android SDK 35 and NDK 25.2.9519653. Use Hermit's rustup rather than a
 system Rust — the repo pins 1.91.1 via `rust-toolchain.toml`, which Homebrew's
 rustc ignores. Run Rust tests with `cargo nextest run`, not `cargo test`: the
 `command!` macro keeps its generator in a `static mut` and segfaults under the
 test thread pool.
-
-The debug APK is large (~950MB, all ABIs unstripped). Fine over USB; build a
-release variant with your own signing key for anything else — do not ship the
-repo's public `debug.keystore`.
 
 ## What changed
 
@@ -113,6 +163,8 @@ repo's public `debug.keystore`.
 | `app/libs/platform` | `FilePicker` / `FileSaver` via SAF |
 | `AppUiStateMachineImpl` | No-account state opens the cosigner home instead of onboarding |
 | `AccountConfigServiceImpl` | Development builds use real hardware, not the simulator |
+| `SplashScreen` | Block's logo and word mark replaced — this is not their software |
+| `android/app/build.gradle.kts` | `cosigner` release build type: minified, arm64 only, own signing config |
 
 Upstream `main` is preserved in this repo, so `git diff main..sparrow-cosigner`
 shows the complete change set.
