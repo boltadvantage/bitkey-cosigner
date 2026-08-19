@@ -102,7 +102,7 @@ class ExternalPsbtSignScreenPresenter(
     return when (val state = uiState) {
       is State.Intro -> SignIntroBodyModel(
         error = state.error,
-        onBack = { navigator.exit() },
+        onBack = { navigator.goTo(ExternalMultisigHomeScreen) },
         onPick = ::pick
       ).asModalScreen()
 
@@ -151,7 +151,7 @@ class ExternalPsbtSignScreenPresenter(
             completion = null
           )
         },
-        onDone = { navigator.exit() }
+        onDone = { navigator.goTo(ExternalMultisigHomeScreen) }
       ).asModalScreen()
     }
   }

@@ -203,7 +203,12 @@ private fun fallbackAppConfig(appVariant: AppVariant) =
   when (appVariant) {
     AppVariant.Development -> DefaultAccountConfig(
       bitcoinNetworkType = BitcoinNetworkType.SIGNET,
-      isHardwareFake = true,
+      // FORK: upstream defaults development builds to simulated hardware. This
+      // build exists only to talk to a real Bitkey, and a fake would be worse
+      // than a failure here: it silently returns a plausible-looking xpub that
+      // the hardware does not hold, which would be registered in a coordinator
+      // and only discovered when a signature could never be produced.
+      isHardwareFake = false,
       f8eEnvironment = F8eEnvironment.Staging,
       isTestAccount = true,
       isUsingSocRecFakes = false,

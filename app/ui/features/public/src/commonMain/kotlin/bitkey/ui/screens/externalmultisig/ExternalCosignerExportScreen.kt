@@ -60,7 +60,7 @@ class ExternalCosignerExportScreenPresenter(
 
     return when (val state = uiState) {
       State.Intro -> ExportIntroBodyModel(
-        onBack = { navigator.exit() },
+        onBack = { navigator.goTo(ExternalMultisigHomeScreen) },
         onExport = { uiState = State.Tapping }
       ).asModalScreen()
 
@@ -110,7 +110,7 @@ class ExternalCosignerExportScreenPresenter(
             completion = null
           )
         },
-        onDone = { navigator.exit() }
+        onDone = { navigator.goTo(ExternalMultisigHomeScreen) }
       ).asModalScreen()
     }
   }
