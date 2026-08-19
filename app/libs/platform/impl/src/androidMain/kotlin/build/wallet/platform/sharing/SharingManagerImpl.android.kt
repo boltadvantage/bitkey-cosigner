@@ -81,6 +81,42 @@ class SharingManagerImpl(
     }.logFailure { "Error sharing a file." }
   }
 
+  override fun shareFile(
+    data: ByteString,
+    mimeType: MimeType,
+    fileName: String,
+    title: String,
+    completion: ((Boolean) -> Unit)?,
+  ) {
+    catchingResult {
+      SharingManagerBroadcastReceiver.setManager(this)
+      this.completion = completion
+
+      val dataFile = File(activity.filesDir, fileName).apply {
+        writeBytes(data.toByteArray())
+      }
+      val dataUri = FileProvider
+        .getUriForFile(activity, "${activity.packageName}.provider", dataFile)
+
+      val intent = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType.name
+        putExtra(Intent.EXTRA_TITLE, title)
+        putExtra(Intent.EXTRA_STREAM, dataUri)
+        // Temporarily allow the receiving app to read the file while sharing.
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+
+      val receiver = Intent(activity, SharingManagerBroadcastReceiver::class.java)
+      val pendingIntent = PendingIntent.getBroadcast(
+        activity,
+        0,
+        receiver,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+      )
+      activity.startActivity(Intent.createChooser(intent, title, pendingIntent.intentSender))
+    }.logFailure { "Error sharing file $fileName." }
+  }
+
   override fun completed() {
     completion?.invoke(true)
   }

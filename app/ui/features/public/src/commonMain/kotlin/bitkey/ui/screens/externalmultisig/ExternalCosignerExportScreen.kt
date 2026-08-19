@@ -90,18 +90,20 @@ class ExternalCosignerExportScreenPresenter(
         derivationPath = ExternalCosignerExport.originPath(state.key),
         xpub = state.key.key.xpub,
         onSaveJson = {
-          sharingManager.shareData(
+          sharingManager.shareFile(
             data = ExternalCosignerExport.toColdcardMultisigJson(state.key).encodeUtf8(),
             mimeType = MimeType.JSON,
-            title = "${ExternalCosignerExport.fileBaseName(state.key)}.json",
+            fileName = "${ExternalCosignerExport.fileBaseName(state.key)}.json",
+            title = "Save cosigner key",
             completion = null
           )
         },
         onSaveText = {
-          sharingManager.shareData(
+          sharingManager.shareFile(
             data = ExternalCosignerExport.toManualEntryText(state.key).encodeUtf8(),
             mimeType = MimeType.TEXT_PLAIN,
-            title = "${ExternalCosignerExport.fileBaseName(state.key)}.txt",
+            fileName = "${ExternalCosignerExport.fileBaseName(state.key)}.txt",
+            title = "Save cosigner details",
             completion = null
           )
         },
