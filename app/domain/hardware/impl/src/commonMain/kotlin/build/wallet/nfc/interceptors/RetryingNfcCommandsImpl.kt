@@ -234,9 +234,9 @@ private open class RetryingNfcCommands(
 
   override suspend fun signExternalTransaction(
     session: NfcSession,
-    psbt: Psbt,
+    psbtBase64: String,
     originFingerprint: String,
-  ): Psbt = retry { commands.signExternalTransaction(session, psbt, originFingerprint) }
+  ): String = retry { commands.signExternalTransaction(session, psbtBase64, originFingerprint) }
 
   override suspend fun sweepTransaction(
     session: NfcSession,

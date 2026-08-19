@@ -370,14 +370,14 @@ class BitkeyW1Commands(
 
   override suspend fun signExternalTransaction(
     session: NfcSession,
-    psbt: Psbt,
+    psbtBase64: String,
     originFingerprint: String,
-  ): Psbt {
-    val signed = executeCommand(
+  ): String =
+    executeCommand(
       session = session,
       generateCommand = {
         SignExternalTransaction(
-          psbt.base64,
+          psbtBase64,
           originFingerprint,
           session.parameters.asyncNfcSigning
         )
@@ -386,8 +386,6 @@ class BitkeyW1Commands(
       getResponse = { state: PartiallySignedTransactionState.Data -> state.response },
       generateResult = { state: PartiallySignedTransactionState.Result -> state.value }
     )
-    return psbt.copy(base64 = signed)
-  }
 
   private suspend fun getInitialSpendingPublicKeyInternal(
     session: NfcSession,

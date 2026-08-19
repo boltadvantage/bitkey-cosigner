@@ -673,14 +673,18 @@ interface NfcCommands {
    * @param originFingerprint master fingerprint of the Bitkey, as reported by
    * the origin of the key from [deriveExternalCosignerKey].
    *
-   * @return the PSBT with the hardware signature added. It will not be
+   * Takes and returns base64 rather than the domain [Psbt] type: an externally
+   * supplied PSBT has no wallet context to build one from, and fabricating the
+   * missing fields would invent numbers the UI might then display.
+   *
+   * @return the base64 PSBT with the hardware signature added. It will not be
    * finalized — the other cosigners still have to sign.
    */
   suspend fun signExternalTransaction(
     session: NfcSession,
-    psbt: Psbt,
+    psbtBase64: String,
     originFingerprint: String,
-  ): Psbt = throw NfcException.CommandError(
+  ): String = throw NfcException.CommandError(
     message = "signExternalTransaction is not supported on this hardware"
   )
 

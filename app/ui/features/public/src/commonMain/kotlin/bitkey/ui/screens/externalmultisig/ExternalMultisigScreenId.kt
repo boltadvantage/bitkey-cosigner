@@ -8,4 +8,13 @@ enum class ExternalMultisigScreenId : EventTrackerScreenId {
 
   /** Shows the derived cosigner key and offers to save it. */
   EXTERNAL_COSIGNER_EXPORT_RESULT,
+
+  /** Prompts for the PSBT file to sign. */
+  EXTERNAL_PSBT_SIGN_PICK,
+
+  /** Shows the transaction details and the verification warning. */
+  EXTERNAL_PSBT_SIGN_REVIEW,
+
+  /** Offers to save the signed PSBT back out. */
+  EXTERNAL_PSBT_SIGN_DONE,
 }

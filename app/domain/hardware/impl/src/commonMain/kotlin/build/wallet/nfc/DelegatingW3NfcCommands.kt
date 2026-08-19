@@ -38,11 +38,11 @@ internal abstract class DelegatingW3NfcCommands : W3NfcCommands {
 
   override suspend fun signExternalTransaction(
     session: NfcSession,
-    psbt: Psbt,
+    psbtBase64: String,
     originFingerprint: String,
   ) = delegatedCommands(session).signExternalTransaction(
     session = session,
-    psbt = psbt,
+    psbtBase64 = psbtBase64,
     originFingerprint = originFingerprint
   )
 
