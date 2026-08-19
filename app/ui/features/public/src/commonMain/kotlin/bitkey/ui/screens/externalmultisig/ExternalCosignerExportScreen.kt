@@ -75,9 +75,12 @@ class ExternalCosignerExportScreenPresenter(
           },
           onSuccess = { key -> uiState = State.Exported(key) },
           onCancel = { uiState = State.Intro },
-          // Deriving a public key does not require the device to be unlocked,
-          // so this costs the user nothing and keeps the flow to a single tap.
-          needsAuthentication = false,
+          // Required: firmware lists IPC_PROTO_DERIVE_KEY_DESCRIPTOR_CMD under its
+          // authenticated commands, so the device answers UNAUTHENTICATED unless it
+          // has been unlocked first. Reading a public key intuitively should not
+          // need a fingerprint, but the hardware disagrees, and the resulting
+          // failure surfaces only as a generic NFC error.
+          needsAuthentication = true,
           // This app deliberately has no account to check the hardware against.
           hardwareVerification = NotRequired,
           screenPresentationStyle = Modal,
