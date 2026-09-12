@@ -82,11 +82,28 @@ details this app shows are the only chance to notice a tampered PSBT, and they
 are only worth anything if you check them against the coordinator that built the
 transaction. The phone is the online half of the setup.
 
-**The hardware key has no seed backup.** Bitkey never exposes a seed phrase for
-the device key — recovery is meant to run through Block's server key and social
-recovery, none of which apply to a foreign descriptor. If the device is lost or
-destroyed, that leg of your multisig cannot be restored from a phrase. Your
-quorum survives on the other signers, but plan the migration in advance.
+**This signer cannot be replaced or backed up. Ever.** Bitkey never exposes a
+seed phrase for the device key, and Block's device-replacement flow does not
+help: it mints a *new* keyset at a bumped account index and sweeps funds to it.
+That repairs wallets Block coordinates. Your external descriptor references one
+specific xpub from the old seed, nothing sweeps it, and Block does not know the
+wallet exists. New device means new seed, new xpub, dead leg.
+
+Wiping the device does the same thing. So does any recovery that provisions new
+hardware. The official app will not warn you, because it has no idea these
+wallets exist.
+
+Two rules follow:
+
+- **Never let your quorum depend on the Bitkey.** Treat it as a signer that can
+  vanish permanently, without warning, and design so the remaining signers can
+  still spend. A 2-of-2 including a Bitkey is reckless.
+- **Have a migration plan before you need one.** When the Bitkey leg dies you are
+  down to no redundancy — spend everything to a fresh multisig immediately
+  rather than running on the remaining keys indefinitely.
+
+If you want a third signer you can actually restore from a phrase, use hardware
+that has one. This is the sharpest argument against using a Bitkey here at all.
 
 **Back up the wallet's output descriptor separately.** Your Bitkey holds a key
 but has no idea it belongs to your multisig, and the official app cannot tell
